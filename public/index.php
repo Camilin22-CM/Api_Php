@@ -43,8 +43,28 @@ try {
 // Obtener método HTTP y ruta
 $method = $_SERVER['REQUEST_METHOD'];
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$path = str_replace('/api', '', $path); // Remover prefijo /api
+
+// Extraer solo la parte después de index.php
+$scriptName = $_SERVER['SCRIPT_NAME']; // /api-rest-php/public/index.php
+if (strpos($path, $scriptName) === 0) {
+    // Si la ruta contiene el nombre completo del script, remover
+    $path = substr($path, strlen($scriptName));
+} else {
+    // Alternativamente, remover la carpeta base
+    $base = basename(dirname(dirname(__FILE__)));
+    $pattern = '#/' . preg_quote($base) . '/public(/index\.php)?#';
+    $path = preg_replace($pattern, '', $path);
+}
+
+// Limpiar la ruta
 $path = trim($path, '/');
+if (empty($path) && strpos($_SERVER['REQUEST_URI'], 'index.php') !== false) {
+    $path = '';
+}
+
+// Debug: mostrar valores para diagnosticar
+// Descomenta la siguiente línea si necesitas debuggear
+// error_log("DEBUG - Method: $method, Path: '$path', REQUEST_URI: {$_SERVER['REQUEST_URI']}, SCRIPT_NAME: {$_SERVER['SCRIPT_NAME']}");
 
 // Router
 try {
